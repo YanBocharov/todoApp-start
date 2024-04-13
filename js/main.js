@@ -5,6 +5,8 @@ const emptyList = document.querySelector("#emptyList");
 
 let tasks = [];
 
+checkEmptyList();
+
 form.addEventListener("submit", addTask);
 tasksList.addEventListener("click", doneTask);
 tasksList.addEventListener("click", deleteTask);
@@ -23,6 +25,8 @@ function addTask(event) {
 
   // Добавление задачи в массив с задачами
   tasks.push(newTask);
+
+  saveToLocalStorage();
 
   // Формирую CSS класс
   const cssClass = newTask.done ? "task-title task-title--done" : "task-title";
@@ -43,11 +47,10 @@ function addTask(event) {
   tasksList.insertAdjacentHTML("beforeend", taskHTML);
 
   taskInput.value = "";
+
   taskInput.focus();
 
-  if (tasksList.children.length > 1) {
-    emptyList.classList.add("none");
-  }
+  checkEmptyList();
 }
 
 function deleteTask(event) {
@@ -59,18 +62,14 @@ function deleteTask(event) {
     // Определяем ID задачи
     const id = Number(parentNode.id);
 
-    // Находим индекс задачи в массиве
-    const index = tasks.findIndex((task) => task.id === id);
+    tasks = tasks.filter((task) => task.id !== id);
 
-    // Удаляем задачу из массива с задачами
-    tasks.splice(index, 1);
+    saveToLocalStorage();
 
     // Удаляем задачу из разметки
     parentNode.remove();
 
-    if (tasksList.children.length === 1) {
-      emptyList.classList.remove("none");
-    }
+    checkEmptyList();
   }
 }
 
@@ -88,10 +87,33 @@ function doneTask(event) {
 
     task.done = !task.done;
 
+    saveToLocalStorage();
+
     console.log(task);
 
     const taskTitle = parentNode.querySelector(".task-title");
 
     taskTitle.classList.toggle("task-title--done");
+
+    checkEmptyList();
   }
+}
+
+function checkEmptyList() {
+  if (tasks.length === 0) {
+    const emptyListHTML = `<li id="emptyList" class="list-group-item empty-list">
+    <img src="./img/leaf.svg" alt="Empty" width="48" class="mt-3" />
+    <div class="empty-list__title">Список дел пуст</div>
+  </li>`;
+    tasksList.insertAdjacentHTML("afterbegin", emptyListHTML);
+  }
+
+  if (tasks.length > 0) {
+    const emptyListEl = document.querySelector("#emptyList");
+    emptyListEl ? emptyListEl.remove() : null;
+  }
+}
+
+function saveToLocalStorage() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
 }
